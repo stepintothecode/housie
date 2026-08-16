@@ -1,0 +1,87 @@
+# Cloud builds, because iOS release binaries need macOS and this project is
+# developed on Windows.
+#
+# Android does not need this and builds locally. It is here so both stores are
+# fed from the same commit.
+#
+# Set up once in the Codemagic UI:
+#   - a group named `google_play` holding GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+#   - a group named `android_signing` holding CM_KEYSTORE, CM_KEYSTORE_PASSWORD,
+#     CM_KEY_ALIAS and CM_KEY_PASSWORD
+#   - App Store Connect integration named `stepintothecode` for iOS signing
+#
+# None of those values belong in this file or anywhere else in the repo.
+
+definitions:
+  flutter_setup: &flutter_setup
+    flutter: 3.47.0
+    xcode: latest
+    cocoapods: default
+
+  checks: &checks
+    - name: Dependencies
+      script: flutter pub get
+    - name: Analyze
+      script: flutter analyze
+    - name: Test
+      script: flutter test
+
+workflows:
+  android:
+    name: Android release
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      <<: *flutter_setup
+      groups:
+        - google_play
+        - android_signing
+      vars:
+        PACKAGE_NAME: com.stepintothecode.housiebingo
+      android_signing:
+        - housie_upload
+    scripts:
+      - *checks
+      - name: Build app bundle
+        script: flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        # Never `production`. A new personal Play account has to run a closed
+        # test with twelve testers for fourteen days first, and promoting a
+        # build by hand is the only sane way to control that.
+        track: internal
+        submit_as_draft: true
+
+  ios:
+    name: iOS release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      <<: *flutter_setup
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.stepintothecode.housiebingo
+      vars:
+        APP_STORE_APPLE_ID: 0000000000 # replace once the app exists in App Store Connect
+      integrations:
+        app_store_connect: stepintothecode
+    scripts:
+      - *checks
+      - name: Set up signing
+        script: xcode-project use-profiles
+      - name: Build ipa
+        script: flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Left off on purpose. A first release should be looked at in
+        # TestFlight before it goes anywhere near review.
+        submit_to_app_store: false

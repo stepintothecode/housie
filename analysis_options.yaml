@@ -1,0 +1,40 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    # A missing await in this app means a number is spoken after the next one
+    # is drawn. Worth failing the build over rather than reading past.
+    unawaited_futures: error
+    missing_required_param: error
+    missing_return: error
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    # lib/core must run anywhere, so nothing in it may reach for a platform.
+    # These keep the rest of the codebase honest about its edges.
+    always_declare_return_types: true
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+
+    # Off on purpose. The fix it wants is a private named parameter, which
+    # would put `_speaker:` and `_device:` at every call site to save one
+    # line in a constructor.
+    prefer_initializing_formals: false
+    sort_child_properties_last: true
+    unawaited_futures: true
+    use_super_parameters: true

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kept apart from colors.xml, which flutter_launcher_icons rewrites.
+
+     app_background must match Palette.light.background in
+     lib/app/theme/tokens.dart. A test fails if the two drift. -->
+<resources>
+    <color name="app_background">#FFFFFF</color>
+</resources>

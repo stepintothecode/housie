@@ -1,0 +1,60 @@
+name: housie_bingo_caller
+description: >-
+  Housie Bingo Caller: No Ads. A number caller for Housie, Tambola and Bingo,
+  with no adverts and no tracking. Works offline.
+publish_to: none
+
+# Shown on the support screen as well. A test keeps AppInfo.version in step.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Reaching the platform speech engine, the browser, the vibration motor and
+  # on-device storage. Nothing here talks to a network. Each one is behind an
+  # interface in lib/adapters, so swapping any of them touches one file.
+  flutter_tts: ^4.2.5
+  url_launcher: ^6.3.2
+  shared_preferences: ^2.5.5
+  wakelock_plus: ^1.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Draws the launcher icons in tool/make_icons.dart, then installs them.
+  image: ^4.8.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  assets:
+    # The same file the launcher icon is generated from, so the mark on the
+    # about screen can never drift from the one on the home screen.
+    - assets/icon/icon.png
+
+flutter_launcher_icons:
+  image_path: assets/icon/icon.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#0E1117"
+  adaptive_icon_foreground: assets/icon/icon-foreground.png
+  adaptive_icon_monochrome: assets/icon/icon-monochrome.png
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#0E1117"
+  image: assets/icon/splash.png
+  image_dark: assets/icon/splash.png
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#0E1117"
+    image: assets/icon/splash.png
+    image_dark: assets/icon/splash.png

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Must match Palette.dark.background in lib/app/theme/tokens.dart.
+     A test fails if the two drift. -->
+<resources>
+    <color name="app_background">#0E1117</color>
+</resources>

@@ -1,0 +1,59 @@
+# Dependencies. pubspec.lock is deliberately NOT ignored: this is an app, not
+# a library, and a store build has to be reproducible from the repo.
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# Build and package output
+build/
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM.zip
+
+# Test and coverage output
+coverage/
+test/**/failures/
+*.log
+
+# Signing. These must never reach the repo: the keystore and its passwords are
+# the only proof that an update comes from you. Losing them means a new
+# listing; leaking them means someone else can ship as you.
+android/key.properties
+*.jks
+*.keystore
+ios/Runner/GoogleService-Info.plist
+*.mobileprovision
+*.p8
+*.p12
+*.cer
+
+# Generated platform glue
+.flutter-plugins
+.flutter-plugins-dependencies
+android/.gradle/
+android/local.properties
+android/app/src/main/res/drawable*/launch_background.xml.bak
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.symlinks/
+ios/Podfile.lock
+
+# Editors
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local environment
+.env
+.env.*
