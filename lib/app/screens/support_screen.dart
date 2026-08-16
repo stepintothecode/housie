@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../../adapters/link_opener.dart';
 import '../../core/app_info.dart';
 import '../theme/tokens.dart';
+import '../widgets/full_house.dart';
+import '../widgets/secret_tap.dart';
 import '../widgets/settings_tiles.dart';
 
 /// What this app is, what it promises, and how to chip in if you want to.
@@ -102,7 +104,9 @@ class SupportScreen extends StatelessWidget {
               ),
               LinkRow(
                 icon: Icons.play_circle_outline_rounded,
-                title: 'Step Into The Code',
+                // Same spelling as the publisher line above. Two versions of
+                // one name on a single screen reads as a mistake.
+                title: AppInfo.publisher,
                 subtitle: 'Other things I build.',
                 onTap: () => _open(context, AppInfo.youtubeUrl),
               ),
@@ -192,22 +196,11 @@ class _Identity extends StatelessWidget {
     final palette = context.palette;
     return Row(
       children: [
-        // The icon's own background is the same near-black as this page in
-        // dark mode, so without an outline the tile has no edge at all.
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(Radii.card),
-            border: Border.all(color: palette.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Image.asset(
-            AppInfo.iconAsset,
-            width: _iconSize,
-            height: _iconSize,
-            // The source art is 1024px square and all flat colour, so it
-            // scales down cleanly.
-            filterQuality: FilterQuality.medium,
-          ),
+        // Seven taps on the icon brings the house down. It looks like a
+        // picture, which is the point.
+        SecretTap(
+          onUnlocked: () => FullHouse.celebrate(context),
+          child: _tile(palette),
         ),
         const SizedBox(width: Space.lg),
         Expanded(
@@ -227,6 +220,24 @@ class _Identity extends StatelessWidget {
       ],
     );
   }
+
+  /// The icon's own background is the same near-black as this page in dark
+  /// mode, so without an outline the tile has no edge at all.
+  Widget _tile(Palette palette) => Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(Radii.card),
+      border: Border.all(color: palette.border),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Image.asset(
+      AppInfo.iconAsset,
+      width: _iconSize,
+      height: _iconSize,
+      // The source art is 1024px square and all flat colour, so it scales
+      // down cleanly.
+      filterQuality: FilterQuality.medium,
+    ),
+  );
 
   static const _iconSize = 64.0;
 }

@@ -18,8 +18,8 @@ abstract final class AppInfo {
   static const shortName = 'Housie Caller';
 
   /// Shown under the name on the about screen, and the name the stores list
-  /// the app under.
-  static const publisher = 'Step Into The Code';
+  /// the app under. Written closed up, matching the YouTube handle.
+  static const publisher = 'StepIntoTheCode';
 
   /// The launcher artwork, reused on the about screen.
   static const iconAsset = 'assets/icon/icon.png';

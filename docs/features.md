@@ -216,7 +216,16 @@ Complete as of version 1.0.0. If something is in the app, it is in here.
 - **Contrast**: the palettes were picked so text on every surface clears the
   usual readability thresholds in both themes.
 
-## 17. What it deliberately does not do
+## 17. One thing that is not written down anywhere in the app
+
+Tap the app icon on the About screen seven times, within three seconds of
+each other.
+
+It is not a button, has no ripple, and is hidden from screen readers on
+purpose, so nobody trips over it by accident. It clears itself away after four
+seconds, or on a tap, and touches nothing else in the app.
+
+## 18. What it deliberately does not do
 
 Listed because each was considered and rejected, not overlooked.
 

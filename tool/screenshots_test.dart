@@ -18,11 +18,8 @@
 
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:housie_bingo_caller/app/game_controller.dart';
 import 'package:housie_bingo_caller/app/orientation_controller.dart';
@@ -32,8 +29,11 @@ import 'package:housie_bingo_caller/app/screens/settings_screen.dart';
 import 'package:housie_bingo_caller/app/screens/support_screen.dart';
 import 'package:housie_bingo_caller/app/settings_controller.dart';
 import 'package:housie_bingo_caller/app/theme/app_theme.dart';
+import 'package:housie_bingo_caller/app/widgets/full_house.dart';
 import 'package:housie_bingo_caller/core/game_mode.dart';
 import 'package:housie_bingo_caller/core/settings.dart';
+
+import 'render.dart';
 
 import '../test/support/fake_device.dart';
 import '../test/support/fake_link_opener.dart';
@@ -52,7 +52,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await _loadFonts();
+    await loadBundledFonts();
     Directory(_outputDir).createSync(recursive: true);
   });
 
@@ -161,6 +161,47 @@ void main() {
     );
   });
 
+  testWidgets('the easter egg', timeout: _quick, (tester) async {
+    tester.view.physicalSize = _size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    // The boundary has to sit outside the app, not inside its home. The
+    // celebration is a route pushed over the top, so a boundary within the
+    // home screen captures only what is underneath it.
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: key,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          // Named so the inline styles in the celebration inherit a real
+          // font, the same reason _shoot does it.
+          theme: AppTheme.dark().copyWith(
+            textTheme: AppTheme.dark().textTheme.apply(fontFamily: renderFont),
+          ),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => FullHouse.celebrate(context),
+                  child: const Text('go'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    // Far enough in that the later balls have been let go and the first are
+    // halfway down, rather than a single row still at the top.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 2400));
+
+    await captureToPng(tester, key: key, path: '$_outputDir/easter-egg.png');
+  });
+
   testWidgets('support', timeout: _quick, (tester) async {
     await _shoot(
       tester,
@@ -232,7 +273,7 @@ Future<void> _shoot(
       // component theme holds a style that was resolved before this override,
       // so each of those has to be named again.
       theme: theme.copyWith(
-        textTheme: theme.textTheme.apply(fontFamily: _fontFamily),
+        textTheme: theme.textTheme.apply(fontFamily: renderFont),
         appBarTheme: theme.appBarTheme.copyWith(
           titleTextStyle: _named(theme.appBarTheme.titleTextStyle),
         ),
@@ -266,73 +307,15 @@ Future<void> _shoot(
     () => Future<void>.delayed(const Duration(milliseconds: 100)),
   );
   await tester.pump();
-  stdout.writeln('$name: laid out');
 
-  final boundary = tester.renderObject<RenderRepaintBoundary>(
-    find.byKey(_boundary),
+  await captureToPng(
+    tester,
+    key: _boundary,
+    path: '$_outputDir/$name.png',
+    pixelRatio: 2,
   );
-  // Not wrapped in runAsync. That is what golden tests do, and runAsync
-  // deadlocks here against the test binding's own rasterisation.
-  final image = await boundary.toImage(pixelRatio: 2);
-  stdout.writeln('$name: rasterised');
-  final data = await image.toByteData(format: ui.ImageByteFormat.png);
-  image.dispose();
-  File('$_outputDir/$name.png').writeAsBytesSync(data!.buffer.asUint8List());
-  stdout.writeln('$name: wrote $_outputDir/$name.png');
 }
 
 final _boundary = GlobalKey();
 
-TextStyle? _named(TextStyle? style) => style?.copyWith(fontFamily: _fontFamily);
-
-/// Name the screenshots render text under. The theme is pointed at it in
-/// [_shoot]; the app itself does not set a font and uses the platform's.
-const _fontFamily = 'ScreenshotRoboto';
-
-/// The flutter_test renderer draws every glyph as a filled box unless real
-/// fonts are registered. Both of these ship inside the Flutter SDK, so the
-/// output matches what Android actually renders rather than whatever happens
-/// to be installed on this machine.
-Future<void> _loadFonts() async {
-  final cache = _materialFontsDir();
-  if (cache == null) {
-    stdout.writeln('material_fonts not found: text will render as boxes');
-    return;
-  }
-
-  // Regular through black, so w400 to w800 in the theme all resolve.
-  const weights = [
-    'roboto-regular.ttf',
-    'roboto-medium.ttf',
-    'roboto-bold.ttf',
-    'roboto-black.ttf',
-  ];
-  final text = FontLoader(_fontFamily);
-  for (final name in weights) {
-    final file = File('$cache/$name');
-    if (file.existsSync()) text.addFont(_bytes(file));
-  }
-  await text.load();
-
-  final icons = FontLoader('MaterialIcons')
-    ..addFont(_bytes(File('$cache/materialicons-regular.otf')));
-  await icons.load();
-
-  stdout.writeln('fonts loaded from $cache');
-}
-
-Future<ByteData> _bytes(File file) async =>
-    ByteData.sublistView(file.readAsBytesSync());
-
-/// Walks up from the running Flutter tool to its bundled fonts.
-String? _materialFontsDir() {
-  final flutterRoot = Platform.environment['FLUTTER_ROOT'];
-  final candidates = [
-    if (flutterRoot != null) '$flutterRoot/bin/cache/artifacts/material_fonts',
-    r'C:\src\flutter\bin\cache\artifacts\material_fonts',
-  ];
-  for (final path in candidates) {
-    if (Directory(path).existsSync()) return path;
-  }
-  return null;
-}
+TextStyle? _named(TextStyle? style) => style?.copyWith(fontFamily: renderFont);

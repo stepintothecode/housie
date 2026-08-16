@@ -16,6 +16,74 @@ order to do things in.
 
 ---
 
+## Artwork
+
+All of it is generated. Nothing in `assets/icon/` is drawn by hand, and none
+of it should be edited directly.
+
+### Regenerating
+
+Only needed when `tool/icon_art.dart` changes. Run all three, in order:
+
+```sh
+flutter test tool/make_icons_test.dart   # redraws assets/icon/*.png
+dart run flutter_launcher_icons          # installs them into android/ and ios/
+dart run flutter_native_splash:create    # rebuilds the launch screens
+```
+
+The first reports a timeout after writing each file. That is expected; read
+the "wrote ..." lines instead of the exit code.
+
+Then commit **everything** it touched, not just `assets/icon/`. It rewrites
+files under `android/app/src/main/res/mipmap-*`, `android/app/src/main/res/
+drawable*`, `android/app/src/main/res/values*/styles.xml` and
+`ios/Runner/Assets.xcassets/AppIcon.appiconset/`.
+
+Two things it does **not** clobber, both deliberate:
+
+- `android/app/src/main/res/values*/app_colors.xml`, which holds the window
+  background. It is kept out of the generated `colors.xml` for exactly this
+  reason.
+- Anything in `lib/`.
+
+`test/repo_tests/icons_test.dart` checks the files exist, are PNGs of the
+right size and are not blank. It cannot check they are up to date: the
+generator renders real text, and text rasterises differently per platform, so
+a byte comparison would fail on any machine but the one that drew them.
+**Regenerating is a manual step you have to remember.**
+
+### What each store wants
+
+| Where | Size | Rules |
+|---|---|---|
+| Play listing icon | 512x512 PNG | Under 1 MB. Square and full bleed. Do **not** round the corners; Play masks it itself |
+| Play feature graphic | 1024x500 PNG | Separate artwork, not the icon. Required, and the listing will not submit without it |
+| App Store icon | 1024x1024 PNG | **No alpha channel.** App Store Connect rejects any icon with transparency |
+| In app | generated | Handled by flutter_launcher_icons; nothing to upload |
+
+- [ ] Export the Play listing icon by resizing `assets/icon/icon.png` to
+      512x512. It is already full bleed and square, so nothing else to do
+- [ ] The App Store icon is handled: `remove_alpha_ios: true` in
+      `pubspec.yaml` flattens it during generation. If you ever export one by
+      hand instead, flatten it onto the background yourself or the upload is
+      rejected with a message that does not say why
+
+### Android specifics that are already handled
+
+- **Adaptive icon**: the launcher composes `icon-foreground.png` over the
+  background colour and crops to the middle 66%. The foreground is drawn well
+  inside that, so nothing is clipped on a circular or squircle launcher.
+- **Themed icon**: `icon-monochrome.png` is what Android 13 and later tint to
+  match the wallpaper. It is a flat silhouette with no numbers, because the
+  detail disappears at that treatment.
+
+### If you change the icon after release
+
+Nothing special. Both stores pick up the new icon from the next build; the
+Play listing icon is separate and has to be re-uploaded by hand.
+
+---
+
 ## Android: the whole thing, in order
 
 Roughly three weeks start to finish, and almost all of that is step 9 waiting.
@@ -109,9 +177,8 @@ reads `com.stepintothecode.housiebingo`.
 [store-listing.md](store-listing.md).
 
 - [ ] App name, short description, full description
-- [ ] **App icon**, 512x512 PNG. Resize `assets/icon/icon.png`
-- [ ] **Feature graphic**, 1024x500 PNG. Required, and the listing will not
-      submit without it
+- [ ] **App icon** and **feature graphic**. See [Artwork](#artwork) above for
+      the sizes and the two rules that get an upload rejected
 - [ ] **Phone screenshots**, between 2 and 8, at least 1080px on the short
       edge. Start from `build/screenshots/`, add captions
 - [ ] Category **Games > Casual**, tags Casual / Board / Family
